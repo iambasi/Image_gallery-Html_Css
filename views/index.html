@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Image Management</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <h1>Imaghy</h1>
+
+    <h2>All Images</h2>
+    <div id="image-list"></div>
+
+    <h2>Add Image</h2>
+    <input type="text" id="image" placeholder="Image URL" />
+    <input type="text" id="description" placeholder="Description" />
+    <button id="add-image-btn">Add Image</button>
+
+    <h2>Update Image</h2>
+    <input type="text" id="update-id" placeholder="Image ID" />
+    <input type="text" id="update-description" placeholder="New Description" />
+    <button id="update-image-btn">Update Image</button>
+
+    <h2>Delete Image</h2>
+    <input type="text" id="delete-id" placeholder="Image ID" />
+    <button id="delete-image-btn">Delete Image</button>
+    <script>
+      const api = "http://localhost:3000/api/image";
+      async function fetchImages() {
+        const response = await fetch(api);
+        const images = await response.json();
+        const imageList = document.getElementById("image-list");
+        imageList.innerHTML = "";
+        images.forEach((image) => {
+          const imagePost = document.createElement("div");
+          const imgElement = document.createElement("img");
+          imgElement.setAttribute("src", image.image);
+          imgElement.setAttribute("data-id", image._id); // Add unique identifier
+          imgElement.addEventListener("click", () => {
+            // Copy the image ID to the input fields
+            document.getElementById("update-id").value = image._id;
+            document.getElementById("delete-id").value = image._id;
+          });
+          imagePost.className = "image-container";
+          imagePost.appendChild(imgElement);
+          imagePost.appendChild(
+            document.createTextNode(`Description: ${image.description}`)
+          );
+          imageList.appendChild(imagePost);
+        });
+      }
+
+      async function addImage() {
+        const image = document.getElementById("image").value;
+        const description = document.getElementById("description").value;
+        await fetch(api, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ image, description }),
+        });
+        fetchImages();
+      }
+
+      async function updateImage() {
+        const id = document.getElementById("update-id").value;
+        const description = document.getElementById("update-description").value;
+        await fetch(`${api}/${id}`, {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ description }),
+        });
+        fetchImages();
+      }
+
+      async function deleteImage() {
+        const id = document.getElementById("delete-id").value;
+        await fetch(`${api}/${id}`, {
+          method: "DELETE",
+        });
+        fetchImages();
+      }
+
+      document
+        .getElementById("add-image-btn")
+        .addEventListener("click", addImage);
+      document
+        .getElementById("update-image-btn")
+        .addEventListener("click", updateImage);
+      document
+        .getElementById("delete-image-btn")
+        .addEventListener("click", deleteImage);
+
+      window.onload = fetchImages;
+    </script>
+  </body>
+</html>
